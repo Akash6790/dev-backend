@@ -1,37 +1,173 @@
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tasks</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+          colors: {
+            bg: '#0b0f17',
+            card: 'rgba(255,255,255,0.06)',
+            border: 'rgba(255,255,255,0.08)'
+          },
+          boxShadow: {
+            soft: '0 10px 30px rgba(0,0,0,0.35)'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+  <style>
+    ::selection { background: #2563eb33; }
+    .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .scroll-slim::-webkit-scrollbar{height:8px;width:8px}
+    .scroll-slim::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:999px}
+  </style>
 </head>
+<body class="min-h-screen bg-[radial-gradient(60%_60%_at_50%_0%,_#111827_0%,_#0b0f17_60%)] text-white font-sans">
 
-<body>
-    <div class="main w-full min-h-screen bg-zinc-900">
-        <div class="form px-10">
-            <form action="/create" method="post"> <input
-                    class="block w-full px-2 rounded-md outline-none mb-4 bg-zinc-500" type="text" name="title"
-                    placeholder="Title goes here" /> <textarea
-                    class="block w-full px-5 rounded-md outline-none resize-none bg-zinc-500" name="detail"
-                    placeholder="Description about it"></textarea> <input class="mt-2 bg-blue-600 px-4 py-1 rounded-md"
-                    type="submit" value="Create Task"> </form>
-        </div>
-        <div class="tasks flex gap-3 flex-wrap p-10">
-            <% if (files.length> 0) { %> <% files.forEach(function(val) { %>
-                    <div class="text-blue-400 inline-block mt-3 task w-72 px-3 py-3 rounded-md bg-zinc-500">
-                        <h1 class="text-white text-3xl tracking-tighter">
-                            <%= val %></h1>
-                        </h1> <a class="text-blue-400 inline-block mt-3" href="/files/<%= val %>">Read More..</a>
-                    </div>
-                    <% }) %>
-                        <% } else { %>
-                            <h3 class="text-zinc-600">No Tasks Yet</h3>
-                            <% } %>
-        </div>
+  <!-- Nav -->
+  <header class="sticky top-0 z-30 border-b border-border/60 bg-bg/70 glass">
+    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-extrabold tracking-tight">dev-backend</a>
+      <div class="flex items-center gap-3">
+        <input id="q" type="search" placeholder="Search tasks…"
+               class="scroll-slim w-56 md:w-72 rounded-xl bg-zinc-800/70 border border-border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600"/>
+        <a href="https://github.com/Akash6790/dev-backend" target="_blank"
+           class="hidden sm:inline-block rounded-xl border border-border px-3 py-2 hover:bg-zinc-800/60">GitHub</a>
+      </div>
     </div>
-</body>
+  </header>
 
+  <!-- Main -->
+  <main class="mx-auto max-w-6xl px-4 pb-20 pt-10 space-y-10">
+
+    <!-- Create Card -->
+    <section class="glass rounded-2xl border border-border shadow-soft">
+      <div class="p-6 md:p-8">
+        <h2 class="text-2xl font-semibold tracking-tight">Create a new task</h2>
+        <p class="text-zinc-400 mt-1">Write a title and a short description. It will be saved as a <span class="font-mono">.txt</span> file.</p>
+
+        <form action="/create" method="post" class="mt-6 grid gap-4">
+          <label class="grid gap-2">
+            <span class="text-sm text-zinc-300">Title</span>
+            <input
+              class="rounded-xl bg-zinc-800/70 border border-border px-4 py-3 outline-none focus:ring-2 focus:ring-blue-600"
+              type="text" name="title" placeholder="e.g. Project Plan" required maxlength="60"/>
+          </label>
+
+          <label class="grid gap-2">
+            <span class="text-sm text-zinc-300">Description</span>
+            <textarea id="detail"
+              class="rounded-xl bg-zinc-800/70 border border-border px-4 py-3 outline-none focus:ring-2 focus:ring-blue-600 resize-y min-h-[120px]"
+              name="detail" placeholder="Write the details here…" required></textarea>
+            <div class="flex justify-end text-xs text-zinc-400">
+              <span id="counter">0</span> characters
+            </div>
+          </label>
+
+          <div class="flex items-center gap-3">
+            <input type="submit" value="Create Task"
+              class="cursor-pointer rounded-xl bg-blue-600 hover:bg-blue-500 px-5 py-2.5 font-medium transition"/>
+            <button type="reset"
+              class="rounded-xl border border-border px-5 py-2.5 hover:bg-zinc-800/60">Reset</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- List -->
+    <section class="space-y-3">
+      <div class="flex items-end justify-between">
+        <h3 class="text-xl font-semibold tracking-tight">Your tasks</h3>
+        <span class="text-sm text-zinc-400"><%= files?.length || 0 %> total</span>
+      </div>
+
+      <% if (files && files.length > 0) { %>
+        <div id="grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <% files.forEach(function(val) { %>
+            <article
+              class="group glass rounded-2xl border border-border p-5 shadow-soft hover:shadow-xl hover:-translate-y-0.5 transition">
+              <div class="flex items-start justify-between gap-3">
+                <h4 class="text-lg font-semibold tracking-tight break-words">
+                  <%= val %>
+                </h4>
+                <span class="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wider text-zinc-300">.txt</span>
+              </div>
+
+              <p class="mt-2 line-clamp-2 text-zinc-400">
+                Quick view is not enabled; open to read full content.
+              </p>
+
+              <div class="mt-4 flex items-center gap-2">
+                <a href="/files/<%= val %>"
+                   class="rounded-lg bg-zinc-800/70 border border-border px-3 py-2 text-sm hover:bg-zinc-800 transition">
+                  Read More
+                </a>
+                <button data-filename="<%= val %>" class="copy-link text-sm underline underline-offset-4 hover:no-underline">
+                  Copy Link
+                </button>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="glass rounded-2xl border border-border p-10 text-center">
+          <p class="text-zinc-300">No tasks yet. Create your first one above 👆</p>
+        </div>
+      <% } %>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 hidden rounded-xl bg-zinc-800 border border-border px-4 py-2 text-sm">
+    Link copied!
+  </div>
+
+  <script>
+    // search filter
+    const q = document.getElementById('q');
+    const grid = document.getElementById('grid');
+    if (q && grid) {
+      q.addEventListener('input', () => {
+        const term = q.value.toLowerCase();
+        [...grid.children].forEach(card => {
+          const title = card.querySelector('h4')?.textContent.toLowerCase() || '';
+          card.style.display = title.includes(term) ? '' : 'none';
+        });
+      });
+    }
+
+    // textarea counter
+    const detail = document.getElementById('detail');
+    const counter = document.getElementById('counter');
+    if (detail && counter) {
+      const update = () => counter.textContent = detail.value.length;
+      detail.addEventListener('input', update); update();
+    }
+
+    // copy link toast
+    const toast = document.getElementById('toast');
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.copy-link');
+      if (!btn) return;
+      const url = location.origin + '/files/' + btn.dataset.filename;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 1200);
+      } catch {}
+    });
+  </script>
+</body>
 </html>
